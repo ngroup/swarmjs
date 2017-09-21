@@ -1,9 +1,6 @@
 module SwarmJS {
 
-    interface Vector {
-        x: number;
-        y: number;
-    }
+    type Vector = number[];
 
 
     function rand(min: number, max: number) {
@@ -37,12 +34,12 @@ module SwarmJS {
         }
 
         move(globalBest: Vector, speed: number) {
-            var speed_x: number = 0.8 * this.speed.x + 2 * Math.random() * (this.best.x - this.location.x) + 2 * Math.random() * (globalBest.x - this.location.x);
-            var speed_y: number = 0.8 * this.speed.y + 2 * Math.random() * (this.best.y - this.location.y) + 2 * Math.random() * (globalBest.y - this.location.y);
+            var speed_x: number = 0.8 * this.speed[0] + 2 * Math.random() * (this.best[0] - this.location[0]) + 2 * Math.random() * (globalBest[0] - this.location[0]);
+            var speed_y: number = 0.8 * this.speed[1] + 2 * Math.random() * (this.best[1] - this.location[1]) + 2 * Math.random() * (globalBest[1] - this.location[1]);
             speed_x = clip(-1 * speed, speed, speed_x);
             speed_y = clip(-1 * speed, speed, speed_y);
-            this.speed = { x: speed_x, y: speed_y };
-            this.location = { x: this.location.x + this.speed.x, y: this.location.y + this.speed.y }
+            this.speed = [speed_x, speed_y];
+            this.location = [this.location[0] + this.speed[0], this.location[1] + this.speed[1]]
         }
     }
 
@@ -62,7 +59,7 @@ module SwarmJS {
 
         initialize(xMin: number, xMax: number, yMin: number, yMax: number) {
             for (var i = 0; i < this.particleNumber; i++) {
-                var loc: Vector = { x: rand(xMin, xMax), y: rand(yMin, yMax) };
+                var loc: Vector = [rand(xMin, xMax), rand(yMin, yMax)];
                 this.particles.push(new Particle(loc));
             };
         }
@@ -71,12 +68,12 @@ module SwarmJS {
             // initialize particle value
             this.particles.map(function(part) {
                 // initialize location
-                var fitness: number = tf.evaluate(part.location);
+                var fitness: number = tf.evaluate([part.location[0], part.location[1]]);
                 part.fitness = fitness;
                 part.best = part.location;
                 part.best_fitness = fitness;
                 // initialize speed
-                var speed: Vector = { x: rand(-particleSpeed, particleSpeed), y: rand(-particleSpeed, particleSpeed) };
+                var speed: Vector = [rand(-particleSpeed, particleSpeed), rand(-particleSpeed, particleSpeed)];
                 part.speed = speed;
             });
 
@@ -105,7 +102,7 @@ module SwarmJS {
         }
 
         evaluate(loc: Vector) {
-            var val: number = Math.pow(loc.x - this.origin.x, 2) + Math.pow(loc.y - this.origin.y, 2);
+            var val: number = Math.pow(loc[0] - this.origin[0], 2) + Math.pow(loc[1] - this.origin[1], 2);
             return val
         }
     }
@@ -136,13 +133,13 @@ module SwarmJS {
             var thisopt = this;
 
             this.swarm.particles.map(function(p) {
-                var speed_x: number = 0.8 * p.speed.x + 2 * Math.random() * (p.best.x - p.location.x) + 2 * Math.random() * (globalBest.x - p.location.x);
-                var speed_y: number = 0.8 * p.speed.y + 2 * Math.random() * (p.best.y - p.location.y) + 2 * Math.random() * (globalBest.y - p.location.y);
+                var speed_x: number = 0.8 * p.speed[0] + 2 * Math.random() * (p.best[0] - p.location[0]) + 2 * Math.random() * (globalBest[0] - p.location[0]);
+                var speed_y: number = 0.8 * p.speed[1] + 2 * Math.random() * (p.best[1] - p.location[1]) + 2 * Math.random() * (globalBest[1] - p.location[1]);
                 speed_x = clip(thisopt.vmin, thisopt.vmax, speed_x);
                 speed_y = clip(thisopt.vmin, thisopt.vmax, speed_y);
-                p.speed = { x: speed_x, y: speed_y };
-                p.location = { x: p.location.x + p.speed.x, y: p.location.y + p.speed.y };
-                var fitness = thisopt.tf.evaluate(p.location);
+                p.speed = [speed_x, speed_y];
+                p.location = [p.location[0] + p.speed[0], p.location[1] + p.speed[1]];
+                var fitness = thisopt.tf.evaluate([p.location[0], p.location[1]]);
                 p.fitness = fitness;
                 if (fitness <= p.best_fitness) {
                     p.best = p.location;
