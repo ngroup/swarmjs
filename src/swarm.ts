@@ -79,16 +79,18 @@ module SwarmJS {
 
             this.best = this.particles[0].best;
             this.best_fitness = this.particles[0].best_fitness;
+            this.updateGlobalBest();
+        }
 
+        updateGlobalBest() {
             for (let p of this.particles) {
                 var part_fitness: number = p.best_fitness;
                 if (part_fitness < this.best_fitness) {
-                    this.best_fitness = p.best_fitness;
+                    this.best_fitness = part_fitness;
                     this.best = p.best;
-                };
+                }
             };
         }
-
     }
 
 
@@ -133,8 +135,8 @@ module SwarmJS {
             var thisopt = this;
 
             this.swarm.particles.map(function(p) {
-                var speed_x: number = 0.8 * p.speed[0] + 2 * Math.random() * (p.best[0] - p.location[0]) + 2 * Math.random() * (globalBest[0] - p.location[0]);
-                var speed_y: number = 0.8 * p.speed[1] + 2 * Math.random() * (p.best[1] - p.location[1]) + 2 * Math.random() * (globalBest[1] - p.location[1]);
+                var speed_x: number = thisopt.omega * p.speed[0] + thisopt.c1 * Math.random() * (p.best[0] - p.location[0]) + thisopt.c2 * Math.random() * (globalBest[0] - p.location[0]);
+                var speed_y: number = thisopt.omega * p.speed[1] + thisopt.c1 * Math.random() * (p.best[1] - p.location[1]) + thisopt.c2 * Math.random() * (globalBest[1] - p.location[1]);
                 speed_x = clip(thisopt.vmin, thisopt.vmax, speed_x);
                 speed_y = clip(thisopt.vmin, thisopt.vmax, speed_y);
                 p.speed = [speed_x, speed_y];
@@ -146,13 +148,9 @@ module SwarmJS {
                     p.best_fitness = fitness;
                 }
             });
-            for (let p of this.swarm.particles) {
-                var part_fitness: number = p.best_fitness;
-                if (part_fitness < this.swarm.best_fitness) {
-                    this.swarm.best_fitness = part_fitness;
-                    this.swarm.best = p.best;
-                }
-            };
+
+            this.swarm.updateGlobalBest();
+
         }
     };
 
