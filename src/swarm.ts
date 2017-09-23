@@ -32,15 +32,6 @@ module SwarmJS {
             this.best = null;
             this.best_fitness = null;
         }
-
-        move(globalBest: Vector, speed: number) {
-            var speed_x: number = 0.8 * this.speed[0] + 2 * Math.random() * (this.best[0] - this.location[0]) + 2 * Math.random() * (globalBest[0] - this.location[0]);
-            var speed_y: number = 0.8 * this.speed[1] + 2 * Math.random() * (this.best[1] - this.location[1]) + 2 * Math.random() * (globalBest[1] - this.location[1]);
-            speed_x = clip(-1 * speed, speed, speed_x);
-            speed_y = clip(-1 * speed, speed, speed_y);
-            this.speed = [speed_x, speed_y];
-            this.location = [this.location[0] + this.speed[0], this.location[1] + this.speed[1]]
-        }
     }
 
 
@@ -68,7 +59,7 @@ module SwarmJS {
             // initialize particle value
             this.particles.map(function(part) {
                 // initialize location
-                var fitness: number = tf.evaluate([part.location[0], part.location[1]]);
+                var fitness: number = tf.evaluate(part.location);
                 part.fitness = fitness;
                 part.best = part.location;
                 part.best_fitness = fitness;
@@ -111,6 +102,7 @@ module SwarmJS {
 
 
     export class Optimizer {
+        dimensions: number;
         swarm: Swarm;
         tf: TargetFunc;
         omega: number;
@@ -121,6 +113,7 @@ module SwarmJS {
 
         constructor(swarm: Swarm, tf: TargetFunc,
             omega: number, c1: number, c2: number, vmax: number, vmin: number) {
+            this.dimensions = 2;
             this.swarm = swarm;
             this.tf = tf;
             this.omega = omega;
@@ -133,24 +126,25 @@ module SwarmJS {
         update() {
             var globalBest: Vector = this.swarm.best;
             var thisopt = this;
+            var thisparticles = this.swarm.particles
 
-            this.swarm.particles.map(function(p) {
-                var speed_x: number = thisopt.omega * p.speed[0] + thisopt.c1 * Math.random() * (p.best[0] - p.location[0]) + thisopt.c2 * Math.random() * (globalBest[0] - p.location[0]);
-                var speed_y: number = thisopt.omega * p.speed[1] + thisopt.c1 * Math.random() * (p.best[1] - p.location[1]) + thisopt.c2 * Math.random() * (globalBest[1] - p.location[1]);
-                speed_x = clip(thisopt.vmin, thisopt.vmax, speed_x);
-                speed_y = clip(thisopt.vmin, thisopt.vmax, speed_y);
-                p.speed = [speed_x, speed_y];
-                p.location = [p.location[0] + p.speed[0], p.location[1] + p.speed[1]];
-                var fitness = thisopt.tf.evaluate([p.location[0], p.location[1]]);
-                p.fitness = fitness;
-                if (fitness <= p.best_fitness) {
-                    p.best = p.location;
-                    p.best_fitness = fitness;
+            for (var pi = 0; pi < this.swarm.particleNumber; pi++) {
+                var new_loc = [0, 0]
+                for (var xi = 0; xi < thisopt.dimensions; xi++) {
+                    var pspeed: number = thisopt.omega * thisparticles[pi].speed[xi] + thisopt.c1 * Math.random() * (thisparticles[pi].best[xi] - thisparticles[pi].location[xi]) + thisopt.c2 * Math.random() * (globalBest[xi] - thisparticles[pi].location[xi]);
+                    pspeed = clip(thisopt.vmin, thisopt.vmax, pspeed);
+                    thisparticles[pi].speed[xi] = pspeed;
+                    new_loc[xi] = thisparticles[pi].location[xi] + pspeed;
                 }
-            });
-
+                thisparticles[pi].location = new_loc;
+                var fitness = thisopt.tf.evaluate(thisparticles[pi].location);
+                thisparticles[pi].fitness = fitness;
+                if (fitness <= thisparticles[pi].best_fitness) {
+                    thisparticles[pi].best = thisparticles[pi].location;
+                    thisparticles[pi].best_fitness = fitness;
+                }
+            }
             this.swarm.updateGlobalBest();
-
         }
     };
 
